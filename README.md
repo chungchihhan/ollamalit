@@ -37,3 +37,11 @@ This is a Ollamalit.
    ```bash
    pip install -r requirements.txt
    ```
+
+## Start the application
+
+6. Run the command in the terminal:
+
+   ```bash
+   streamlit run hello.py
+   ```
