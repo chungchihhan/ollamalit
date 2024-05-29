@@ -1,10 +1,6 @@
 import os
-import platform
 import streamlit as st
 from ollama import Client
-from langchain_community.document_loaders import PyPDFLoader
-from io import BytesIO
-from pypdf import PdfReader, PdfWriter
 
 st.set_page_config(page_title="Create model", layout="wide")
 st.title("Ollamalit Create models")
