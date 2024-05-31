@@ -10,6 +10,10 @@ HOSTNAME = "http://localhost:11434"
 if "ollama_client" not in st.session_state:
     st.session_state.ollama_client = Client(host=HOSTNAME)
 
+model_list = {"model_name": []}
+for name in st.session_state.ollama_client.list()["models"]:
+    model_list["model_name"].append(name["name"])
+
 root_path = os.getcwd() # Get the current working directory
 gguf_path = os.path.join(root_path, "gguf-files")
 
@@ -19,7 +23,20 @@ gguf_list = os.listdir(gguf_path)
 gguf_list_filter = [i for i in gguf_list if i.endswith(".gguf")]
 option = st.selectbox("Select a gguf file", gguf_list_filter, help="You can download the gguf file from Huggingface.")
 
-select_path = gguf_path + "/" + option
+with st.container(border=True):
+    col1, col2 = st.columns(2)
+    source = col1.radio(
+        "**Choose the source of the model**👇", ["origin model","gguf file"]
+    )
+    if source == "origin model":
+        col2.markdown("**Select a model to copy from:**")
+        select_path = col2.selectbox(
+            "*Select a model to copy from*👇", model_list["model_name"], label_visibility="collapsed"
+        )
+    elif source == "gguf file":
+        col2.markdown("**Select a gguf file:**")
+        option = col2.selectbox("Select a gguf file ", gguf_list, label_visibility="collapsed")
+        select_path = gguf_path + "/" + option
 
 model_name = st.text_input("Name you model", help="This is the name of the new model that will be created")
 template = st.text_area(
