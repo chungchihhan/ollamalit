@@ -1,4 +1,5 @@
 import os
+import re
 import streamlit as st
 from ollama import Client
 
@@ -39,27 +40,51 @@ with st.container(border=True):
         select_path = gguf_path + "/" + option
 
 model_name = st.text_input("Name you model", help="This is the name of the new model that will be created")
+
+with st.container(border=True):
+    col1, col2 = st.columns(2)
+    template_toggle = col1.toggle("Import template", False)
+    col1.info("Turn on to import a template from an existing model.")
+    if template_toggle:
+        col2.markdown("**Select a template to import**")
+        import_template = col2.selectbox(
+            "Select a template to import", model_list["model_name"], label_visibility="collapsed"
+        )
+
 template = st.text_area(
     label="Enter the template",
     height=200,
+    value=st.session_state.ollama_client.show(import_template)["template"] if template_toggle else "",
 )
-system = st.text_area(
-    label="Enter the system",
-    height=100,
-)
+try:
+    system = st.text_area(
+        label="Enter the system",
+        height=100,
+        value=st.session_state.ollama_client.show(import_template)["system"] if template_toggle else "",
+    )
+except:
+    system = st.text_area(
+        label="Enter the system",
+        height=100,
+    )
 parameters = st.text_area(
     label="Enter the parameters",
-    height=100,
+    height=150,
+    value=(
+        re.sub(r"[ ]+", " ", st.session_state.ollama_client.show(import_template)["parameters"])
+        if template_toggle
+        else ""
+    ),
 )
 parameters_list = parameters.split("\n")
 parameters = "\n".join([f"PARAMETER {p}" for p in parameters_list])
 
-modelfile = f"""
-From {select_path}
-TEMPLATE {template}
-SYSTEM {system}
+modelfile = f'''
+FROM {select_path}
+TEMPLATE """{template}"""
+SYSTEM """{system}"""
 {parameters}
-"""
+'''
 
 def create_model():
     st.session_state.ollama_client.create(model=model_name, modelfile=modelfile)
