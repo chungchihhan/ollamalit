@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.balloons()
-st.title("Welcome to Ollamalit! 👋")
+st.title("Welcome to :rainbow[Ollamalit]! 👋")
 st.caption("A frontend interface for you interact with your ollama models.")
 
 st.divider()

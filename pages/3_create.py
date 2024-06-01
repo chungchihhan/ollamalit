@@ -4,7 +4,7 @@ import streamlit as st
 from ollama import Client
 
 st.set_page_config(page_title="Create model", layout="wide")
-st.title("Ollamalit Create models")
+st.title(":rainbow[Ollamalit] Create models")
 
 # Initiate ollama client
 HOSTNAME = "http://localhost:11434"
@@ -15,6 +15,8 @@ try:
     model_list = {"model_name": []}
     for name in st.session_state.ollama_client.list()["models"]:
         model_list["model_name"].append(name["name"])
+    st.toast("**Start chatting!**")
+    
 except Exception as e:
     st.error("Your ollama should be running in the backend on http://localhost:11434. Please check the connection.")
     st.stop()

@@ -2,7 +2,7 @@ import streamlit as st
 from ollama import Client
 
 st.set_page_config(page_title="Ollama Chat", layout="wide")
-st.title("Chat with Ollama Model")
+st.title(":rainbow[Ollamalit] Chatbot")
 
 # Initiate ollama client
 HOSTNAME = "http://localhost:11434"
@@ -49,6 +49,7 @@ def response_generator():
 try:
     with st.sidebar:
         local_model_dict = st.session_state.ollama_client.list()
+        st.toast("**Start chatting!**")
         for m in local_model_dict["models"]:
             local_model_list.append(m["name"])
 
