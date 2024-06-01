@@ -14,9 +14,13 @@ HOSTNAME = "http://localhost:11434"
 if "ollama_client" not in st.session_state:
     st.session_state.ollama_client = Client(host=HOSTNAME)
 
-model_list = {"model_name": []}
-for name in st.session_state.ollama_client.list()["models"]:
-    model_list["model_name"].append(name["name"])
+try:
+    model_list = {"model_name": []}
+    for name in st.session_state.ollama_client.list()["models"]:
+        model_list["model_name"].append(name["name"])
+except Exception as e:
+    st.error("Your ollama should be running in the backend on http://localhost:11434. Please check the connection.")
+    st.stop()
 
 options = st.selectbox("Select a model", model_list["model_name"])
 
