@@ -27,24 +27,23 @@ st.info(f"Please put the gguf file in the folder: ***{gguf_path}***",icon="❗")
 
 gguf_list = os.listdir(gguf_path)
 gguf_list_filter = [i for i in gguf_list if i.endswith(".gguf")]
-option = st.selectbox("Select a gguf file", gguf_list_filter, help="You can download the gguf file from Huggingface.")
+
+model_name = st.text_input("**Name your new model**", help="This is the name of the new model that will be created")
 
 with st.container(border=True):
     col1, col2 = st.columns(2)
     source = col1.radio(
-        "**Choose the source of the model**👇", ["origin model","gguf file"]
+        "Choose the source of the model👇", ["origin model","gguf file"]
     )
     if source == "origin model":
-        col2.markdown("**Select a model to copy from:**")
+        col2.markdown("Select a model to copy from:")
         select_path = col2.selectbox(
             "*Select a model to copy from*👇", model_list["model_name"], label_visibility="collapsed"
         )
     elif source == "gguf file":
-        col2.markdown("**Select a gguf file:**")
-        option = col2.selectbox("Select a gguf file ", gguf_list, label_visibility="collapsed")
+        col2.markdown("Select a gguf file:")
+        option = col2.selectbox("Select a gguf file ", gguf_list_filter, label_visibility="collapsed")
         select_path = gguf_path + "/" + option
-
-model_name = st.text_input("Name you model", help="This is the name of the new model that will be created")
 
 with st.container(border=True):
     col1, col2 = st.columns(2)
