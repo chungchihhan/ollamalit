@@ -22,7 +22,7 @@ col1.markdown(
 
     Originally, interacting with models requires using the terminal or writing code, which can be inconvenient or challenging for many users. Our goal is to allow users to use and manage their models through a simple and intuitive front-end interface, keeping them away from complex terminal operations.
 
-    Ollamalit provides a *user-friendly interface* that enables you to easily chat with your models, create a new model, and make adjustments without needing to delve into the technical backend details. We hope this design enhances your experience, making it more convenient for everyone to enjoy the powerful capabilities of machine learning and artificial intelligence.
+    Ollamalit provides a *user-friendly interface* that enables you to easily chat with your models, create a new model, and make adjustments without needing to delve into the technical backend details. We hope this design enhances your experience, making it more convenient for everyone to enjoy the powerful capabilities of Ollama.
     """
 )
 
