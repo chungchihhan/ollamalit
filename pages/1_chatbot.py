@@ -49,7 +49,6 @@ def response_generator():
 try:
     with st.sidebar:
         local_model_dict = st.session_state.ollama_client.list()
-        st.toast("**Start chatting!**")
         for m in local_model_dict["models"]:
             local_model_list.append(m["name"])
 
