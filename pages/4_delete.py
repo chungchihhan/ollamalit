@@ -7,8 +7,8 @@ st.title(":rainbow[Ollamalit] Delete models")
 
 # Initiate ollama client
 HOSTNAME = "http://localhost:11434"
-if "ollama_client" not in st.session_state:
-    st.session_state.ollama_client = Client(host=HOSTNAME)
+
+st.session_state.ollama_client = Client(host=HOSTNAME)
 
 def load_model_data():
     model_list = {"model_name": []}
@@ -39,11 +39,12 @@ def load_model_data():
 if "model_df" not in st.session_state:
     st.session_state.model_df = load_model_data()
 
-edited_df = st.data_editor(st.session_state.model_df, hide_index=True)
+edited_df = st.data_editor(st.session_state.model_df, hide_index=True, use_container_width=True)
 
 deleted_models = edited_df[edited_df["Delete"] == True]
 
-with st.popover("Delete"):
+_, _, _, _, bt = st.columns(5)
+with bt.popover(":red[Delete]", use_container_width=True):
     st.markdown("**Are you sure you want to delete these models?**")
     if deleted_models["Model Name"].any():
         for model_name in deleted_models["Model Name"]:
