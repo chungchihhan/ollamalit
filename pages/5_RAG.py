@@ -5,9 +5,8 @@ import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-
-st.set_page_config(page_title="Ollama Create Chatbot", layout="wide")
-st.title("Ollama Embeddings")
+st.set_page_config(page_title="Ollama RAG Chatbot", layout="wide")
+st.title(":rainbow[Ollamalit] RAG Chatbot")
 
 HOSTNAME = "http://localhost:11434"
 if "ollama_client" not in st.session_state:
@@ -36,23 +35,73 @@ for i, d in enumerate(splits):
         metadatas=[d.metadata]
     )
 
-# an example prompt
-prompt = "背隙調整的步驟是什麼？"
 
-# generate an embedding for the prompt and retrieve the most relevant doc
-response = st.session_state.ollama_client.embeddings(
-  prompt=prompt,
-  model="all-minilm"
-)
-results = collection.query(
-  query_embeddings=[response["embedding"]],
-  n_results=1
-)
-data = results['documents'][0][0]
+local_model_list = []
 
-output = st.session_state.ollama_client.generate(
-  model="llama3",
-  prompt=f"Using this data: {data}. Respond to this prompt: {prompt}"
-)
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "message_role" not in st.session_state:
+    st.session_state.message_role = []
 
-st.write(output['response'])
+if "add_system_message" not in st.session_state:
+    st.session_state.add_system_message = False
+
+for role, message in zip(st.session_state.message_role, st.session_state.messages):
+    if message["role"] == "system":
+        continue
+    with st.chat_message(message["role"]):
+        st.markdown(f"**{role}**")
+        st.markdown(message["content"])
+
+
+
+def response_generator():
+    stream = st.session_state.ollama_client.chat(
+        model="llama3:8b-instruct-q4_K_M",
+        messages=st.session_state.messages,
+        stream=True,
+    )
+    # st.write(st.session_state.messages)
+    for chunk in stream:
+      yield chunk["message"]["content"]
+
+st.session_state["ai_model"] = "llama3:8b-instruct-q4_K_M"
+
+if prompt := st.chat_input("What is up?"):
+    question_embeddings = st.session_state.ollama_client.embeddings(
+        prompt=prompt,
+        model="all-minilm"
+    )
+
+    similar_search = collection.query(
+        query_embeddings=[question_embeddings["embedding"]],
+        n_results=5,
+    )
+
+    distances = similar_search["distances"]
+    if float(distances[0][0]) < 15:
+        similar_context = similar_search["documents"][0][0]
+        prompt_template = f"""Based on the following context: {similar_context}, answer the question: **{prompt}**."""
+    else:
+        prompt_template = f"""{prompt}"""
+
+    st.session_state.messages.append({"role": "user", "content": prompt＿template})
+    st.session_state.message_role.append("You")
+
+    # Display user message in chat message container
+    with st.chat_message("user"):
+        st.markdown("**You**")
+        st.markdown(prompt)
+    # Display assistant response in chat message container
+
+    with st.chat_message("assistant"):
+        # with st.spinner("Initializing model..."):
+        #     st.session_state.ollama_client.generate(
+        #         model=st.session_state.ai_model, keep_alive="10m"
+        #     )
+
+        st.markdown(f"**{st.session_state.ai_model}**")
+        response = st.write_stream(response_generator())
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.message_role.append(st.session_state.ai_model)
