@@ -21,7 +21,7 @@ for m in local_model_dict["models"]:
 
 with st.sidebar:
     st.write("## Model Selection")
-    embed_model  = st.selectbox("Select Embedding Model", local_model_list)
+    embed_model  = st.selectbox("Select Embedding Model", local_model_list, index=1)
     chat_model = st.selectbox("Select Chat Model", local_model_list)
 
 
@@ -65,7 +65,7 @@ if "message_role" not in st.session_state:
 for role, message in zip(st.session_state.message_role, st.session_state.messages):
     with st.chat_message(message["role"]):
         st.markdown(f"**{role}**")
-        st.markdown(message["content"])
+        st.markdown(message["display_content"])
 
 # Generate response
 def response_generator(model_name):
@@ -100,13 +100,13 @@ if prompt := st.chat_input("What is up?"):
     else:
         prompt_template = f"""{prompt}"""
 
-    st.session_state.messages.append({"role": "user", "content": prompt＿template})
+    st.session_state.messages.append({"role": "user", "content": prompt_template, "display_content": prompt})
     st.session_state.message_role.append("You")
 
     # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown("**You**")
-        st.markdown(prompt_template)
+        st.markdown(prompt)
     # Display assistant response in chat message container
 
     with st.chat_message("assistant"):
@@ -117,5 +117,5 @@ if prompt := st.chat_input("What is up?"):
 
         st.markdown(f"**{st.session_state.ai_model}**")
         response = st.write_stream(response_generator(chat_model))
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({"role": "assistant", "content": response, "display_content": response})
     st.session_state.message_role.append(st.session_state.ai_model)
