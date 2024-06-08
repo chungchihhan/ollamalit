@@ -18,7 +18,10 @@ if "chromadb_client" not in st.session_state:
     st.session_state.chromadb_client = chromadb.PersistentClient(path=chroma_path)
 collection = st.session_state.chromadb_client.get_or_create_collection(name="pdf")
 
-rag_path = os.path.join(root_path, "rag-files/TS31103-GXA-S背隙調整.pdf")
+files = os.listdir(os.path.join(root_path, "rag-files"))
+selected_file = st.selectbox("Select a file", files)
+rag_path = os.path.join(root_path, "rag-files", selected_file)
+
 loader = PyPDFLoader(rag_path)
 docs = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
