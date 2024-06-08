@@ -36,6 +36,9 @@ collection = st.session_state.chromadb_client.get_or_create_collection(name="pdf
 
 # Split the file you have selected
 rag_path = os.listdir(os.path.join(root_path, "rag-files"))
+for i in rag_path:
+    if i.endswith(".gitignore"):
+        rag_path.remove(i)
 selected_file = st.selectbox("Select a file", rag_path)
 rag_file_path = os.path.join(root_path, "rag-files", selected_file)
 
