@@ -8,28 +8,45 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 st.set_page_config(page_title="Ollama RAG Chatbot", layout="wide")
 st.title(":rainbow[Ollamalit] RAG Chatbot")
 
+# Set up Ollama client
 HOSTNAME = "http://localhost:11434"
 if "ollama_client" not in st.session_state:
     st.session_state.ollama_client = Client(host=HOSTNAME)
 
+# Initialize list of local models
+local_model_list = []
+local_model_dict = st.session_state.ollama_client.list()
+for m in local_model_dict["models"]:
+    local_model_list.append(m["name"])
+
+with st.sidebar:
+    st.write("## Model Selection")
+    embed_model  = st.selectbox("Select Embedding Model", local_model_list)
+    chat_model = st.selectbox("Select Chat Model", local_model_list)
+
+
+# Get the root path for the project
 root_path = os.getcwd()
+
+# Set up ChromaDB client
 chroma_path = os.path.join(root_path, "chroma-files")
 if "chromadb_client" not in st.session_state:
     st.session_state.chromadb_client = chromadb.PersistentClient(path=chroma_path)
 collection = st.session_state.chromadb_client.get_or_create_collection(name="pdf")
 
-files = os.listdir(os.path.join(root_path, "rag-files"))
-selected_file = st.selectbox("Select a file", files)
-rag_path = os.path.join(root_path, "rag-files", selected_file)
+# Split the file you have selected
+rag_path = os.listdir(os.path.join(root_path, "rag-files"))
+selected_file = st.selectbox("Select a file", rag_path)
+rag_file_path = os.path.join(root_path, "rag-files", selected_file)
 
-loader = PyPDFLoader(rag_path)
+loader = PyPDFLoader(rag_file_path)
 docs = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
 splits = text_splitter.split_documents(docs)
 
-
+# Embed the splits 
 for i, d in enumerate(splits):
-    response = st.session_state.ollama_client.embeddings(model="all-minilm", prompt=d.page_content)
+    response = st.session_state.ollama_client.embeddings(model=embed_model, prompt=d.page_content)
     embedding = response["embedding"]
     collection.upsert(
         ids=[str(i)],
@@ -39,29 +56,21 @@ for i, d in enumerate(splits):
     )
 
 
-local_model_list = []
-
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "message_role" not in st.session_state:
     st.session_state.message_role = []
 
-if "add_system_message" not in st.session_state:
-    st.session_state.add_system_message = False
-
 for role, message in zip(st.session_state.message_role, st.session_state.messages):
-    if message["role"] == "system":
-        continue
     with st.chat_message(message["role"]):
         st.markdown(f"**{role}**")
         st.markdown(message["content"])
 
-
-
-def response_generator():
+# Generate response
+def response_generator(model_name):
     stream = st.session_state.ollama_client.chat(
-        model="llama3:8b-instruct-q4_K_M",
+        model=model_name,
         messages=st.session_state.messages,
         stream=True,
     )
@@ -69,12 +78,14 @@ def response_generator():
     for chunk in stream:
       yield chunk["message"]["content"]
 
-st.session_state["ai_model"] = "llama3:8b-instruct-q4_K_M"
 
+st.session_state["ai_model"] = chat_model
+
+# Accept user chat input. Save in session and show them in the chat container.
 if prompt := st.chat_input("What is up?"):
     question_embeddings = st.session_state.ollama_client.embeddings(
         prompt=prompt,
-        model="all-minilm"
+        model=embed_model,
     )
 
     similar_search = collection.query(
@@ -95,16 +106,16 @@ if prompt := st.chat_input("What is up?"):
     # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown("**You**")
-        st.markdown(prompt)
+        st.markdown(prompt_template)
     # Display assistant response in chat message container
 
     with st.chat_message("assistant"):
-        # with st.spinner("Initializing model..."):
-        #     st.session_state.ollama_client.generate(
-        #         model=st.session_state.ai_model, keep_alive="10m"
-        #     )
+        with st.spinner("Initializing model..."):
+            st.session_state.ollama_client.generate(
+                model=st.session_state.ai_model, keep_alive="10m"
+            )
 
         st.markdown(f"**{st.session_state.ai_model}**")
-        response = st.write_stream(response_generator())
+        response = st.write_stream(response_generator(chat_model))
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.session_state.message_role.append(st.session_state.ai_model)
