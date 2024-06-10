@@ -21,8 +21,8 @@ for m in local_model_dict["models"]:
 
 with st.sidebar:
     st.write("## Model Selection")
-    embed_model  = st.selectbox("Select Embedding Model", local_model_list, index=1)
-    chat_model = st.selectbox("Select Chat Model", local_model_list)
+    embed_model  = st.selectbox("Select a Embedding Model", local_model_list, index=1)
+    chat_model = st.selectbox("Select a Chat Model", local_model_list)
 
 
 # Get the root path for the project
@@ -39,7 +39,8 @@ rag_path = os.listdir(os.path.join(root_path, "rag-files"))
 for i in rag_path:
     if i.endswith(".gitignore"):
         rag_path.remove(i)
-selected_file = st.selectbox("Select a file", rag_path)
+
+selected_file = st.selectbox("Select a file", rag_path, help="Put your pdf files in the rag-files folder")
 rag_file_path = os.path.join(root_path, "rag-files", selected_file)
 
 loader = PyPDFLoader(rag_file_path)
@@ -47,17 +48,21 @@ docs = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
 splits = text_splitter.split_documents(docs)
 
-# Embed the splits 
-for i, d in enumerate(splits):
-    response = st.session_state.ollama_client.embeddings(model=embed_model, prompt=d.page_content)
-    embedding = response["embedding"]
-    collection.upsert(
-        ids=[str(i)],
-        embeddings=[embedding],
-        documents=[d.page_content],
-        metadatas=[d.metadata]
-    )
-
+# Embed the splits
+try:
+    for i, d in enumerate(splits):
+        response = st.session_state.ollama_client.embeddings(model=embed_model, prompt=d.page_content)
+        embedding = response["embedding"]
+        collection.upsert(
+            ids=[str(i)],
+            embeddings=[embedding],
+            documents=[d.page_content],
+            metadatas=[d.metadata]
+        )
+except Exception as e:
+    st.error(f"Error: {e}")
+    st.info("You need a embdedding model to run this app, e.g. **all-minilm**.")
+    st.stop()
 
 # Initialize chat history
 if "messages" not in st.session_state:
