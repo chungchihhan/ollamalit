@@ -40,7 +40,12 @@ This is a Ollamalit.
 
 ## Start the application
 
-6. Run the command in the terminal:
+6. (Optional)Prepare your data:
+
+   - put you some pdf files you want to read in the folder named `rag-files`
+   - put gguf files that you have downloaded in the folder named `gguf-files`, you can dowmload gguf files from huggingface.
+
+7. Run the command in the terminal:
 
    ```bash
    streamlit run hello.py
