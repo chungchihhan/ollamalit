@@ -28,12 +28,6 @@ with st.sidebar:
 # Get the root path for the project
 root_path = os.getcwd()
 
-# Set up ChromaDB client
-chroma_path = os.path.join(root_path, "chroma-files")
-if "chromadb_client" not in st.session_state:
-    st.session_state.chromadb_client = chromadb.PersistentClient(path=chroma_path)
-collection = st.session_state.chromadb_client.get_or_create_collection(name="pdf")
-
 # Split the file you have selected
 rag_path = os.listdir(os.path.join(root_path, "rag-files"))
 for i in rag_path:
@@ -42,6 +36,19 @@ for i in rag_path:
 
 selected_file = st.selectbox("Select a file", rag_path, help="Put your pdf files in the rag-files folder")
 rag_file_path = os.path.join(root_path, "rag-files", selected_file)
+
+# Set up ChromaDB client
+collection_name = selected_file.replace(".pdf", "")
+
+try: 
+    chroma_path = os.path.join(root_path, "chroma-files")
+    if "chromadb_client" not in st.session_state:
+        st.session_state.chromadb_client = chromadb.PersistentClient(path=chroma_path)
+    collection = st.session_state.chromadb_client.get_or_create_collection(name=collection_name)
+except Exception as e:
+    st.error(f"The pdf file name is not valid.")
+    st.info(e)
+    st.stop()
 
 loader = PyPDFLoader(rag_file_path)
 docs = loader.load()
@@ -118,10 +125,10 @@ if prompt := st.chat_input("What is up?"):
     # Display assistant response in chat message container
 
     with st.chat_message("assistant"):
-        with st.spinner("Initializing model..."):
-            st.session_state.ollama_client.generate(
-                model=st.session_state.ai_model, keep_alive="10m"
-            )
+        # with st.spinner("Initializing model..."):
+        #     st.session_state.ollama_client.generate(
+        #         model=st.session_state.ai_model, keep_alive="10m"
+        #     )
 
         st.markdown(f"**{st.session_state.ai_model}**")
         response = st.write_stream(response_generator(chat_model))
